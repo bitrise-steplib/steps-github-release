@@ -1,0 +1,96 @@
+format_version: 5
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+app:
+  envs:
+  # Define it (GITHUB_API_TOKEN) in .bitrise.secrets.yml
+  - BITRISE_GITHUB_API_TOKEN: $BITRISE_GITHUB_API_TOKEN
+
+workflows:
+  test:
+    before_run:
+    - audit-this-step
+    steps:
+    - go-list:
+    - golint:
+    - errcheck:
+    - go-test:
+    - script:
+        title: rm -rf ./_tmp
+        inputs:
+        - content: rm -rf ./_tmp
+    - change-workdir:
+        title: cd ./_tmp
+        inputs:
+        - path: ./_tmp
+        - is_create_path: true
+    - path::./:
+        title: Step Test
+        inputs:
+        - api_token: $BITRISE_GITHUB_API_TOKEN
+        - repository_url: https://github.com/godrei/steps-github-release-test.git
+        - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
+        - tag: 0.9.0
+        - name: 0.9.0
+        - body: "First release"
+        - draft: "yes"
+
+  audit-this-step:
+    steps:
+    - script:
+        title: Audit step.yml
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            stepman audit --step-yml ./step.yml
+
+  release:
+    envs:
+    - BITRISE_STEP_GIT_CLONE_URL: https://github.com/godrei/steps-github-release.git
+    - BITRISE_STEP_ID: github-release
+    - BITRISE_STEP_VERSION: $BITRISE_GIT_TAG
+    - BITRISE_GITHUB_API_TOKEN: $BITRISE_GITHUB_API_TOKEN
+    - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
+    before_run:
+    - test
+    steps:
+    - git::https://github.com/godrei/steps-generate-changelog@master:
+        inputs:
+        - new_version: $BITRISE_STEP_VERSION
+    - git::https://github.com/godrei/steps-github-release@master:
+        inputs:
+        - api_token: $BITRISE_GITHUB_API_TOKEN
+        - repository_url: $BITRISE_STEP_GIT_CLONE_URL
+        - commit: $BITRISE_GIT_COMMIT
+        - tag: $BITRISE_STEP_VERSION
+        - name: $BITRISE_STEP_VERSION
+        - body: $BITRISE_CHANGELOG
+        - draft: "yes"
+    - script:
+        title: Share this step
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            bitrise share start -c "${MY_STEPLIB_REPO_FORK_GIT_URL}"
+            echo yes | bitrise share create \
+              --stepid "${BITRISE_STEP_ID}" \
+              --tag "${BITRISE_STEP_VERSION}" \
+              --git "${BITRISE_STEP_GIT_CLONE_URL}"
+            bitrise share finish
+
+  dep-update:
+    title: Dep update
+    description: |
+      Used for updating bitrise dependencies with dep
+    steps:
+    - script:
+        title: Dependency update
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            go get -u -v github.com/golang/dep/cmd/dep
+            dep ensure -v
+            dep ensure -v -update

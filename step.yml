@@ -1,0 +1,75 @@
+title: Github Release
+summary: Create Github Release
+description: Create Github Release
+
+website: https://github.com/godrei/steps-github-release
+source_code_url: https://github.com/godrei/steps-github-release
+support_url: https://github.com/godrei/steps-github-release/issues
+
+type_tags:
+- deploy
+
+toolkit:
+  go:
+    package_name: github.com/godrei/steps-github-release
+
+inputs:
+- api_token: 
+  opts:
+    title: Personal API token
+    summary: Github Personal API token used to access the GitHub API.
+    description: |-
+      Github Personal API token used to access the GitHub API.
+
+      Create your own token: https://blog.github.com/2013-05-16-personal-api-tokens/
+
+      The following scopes needs to be enabled for the token:
+
+      - repo/public_repo
+    is_required: true
+- repository_url: $GIT_REPOSITORY_URL
+  opts:
+    title: Repository URL
+    summary: Github repository URL
+    description: |-
+      URL of the Github repository to release.
+
+      Available formats:
+
+      - https://hostname/owner/repository.git
+      - git@hostname:owner/repository.git
+      - ssh://git@hostname:port/owner/repository.git
+    is_required: true
+- tag: $BITRISE_GIT_TAG
+  opts:
+    title: Tag
+    summary: The name of the tag.
+    is_required: true
+- commit: $BITRISE_GIT_COMMIT
+  opts:
+    title: Commit
+    summary: The commit of the tag
+    description: |-
+      Specifies the commitish value that determines where the Git tag is created from. 
+      Can be any branch or commit SHA. 
+      Unused if the Git tag already exists. 
+      Default: the repository's default branch (usually master).
+    is_required: true
+- name:
+  opts:
+    title: Release name
+    summary: The name of the release.
+    is_required: true
+- body:
+  opts:
+    title: Release body
+    summary: The body of the release.
+    is_required: true
+- draft: yes
+  opts:
+    title: Release body
+    summary: The body of the release.
+    description: |-
+      `true` to create a draft (unpublished) release, `false` to create a published one.
+    value_options: [yes, no]
+    is_required: true

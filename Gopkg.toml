@@ -1,0 +1,15 @@
+[[constraint]]
+  name = "github.com/bitrise-io/go-utils"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/google/go-github"
+  branch = "master"
+
+[[constraint]]
+  name = "golang.org/x/oauth2"
+  branch = "master"
+
+[prune]
+  go-tests = true
+  unused-packages = true
