@@ -2,16 +2,16 @@ title: Github Release
 summary: Create Github Release
 description: Create Github Release
 
-website: https://github.com/godrei/steps-github-release
-source_code_url: https://github.com/godrei/steps-github-release
-support_url: https://github.com/godrei/steps-github-release/issues
+website: https://github.com/bitrise-steplib/steps-github-release
+source_code_url: https://github.com/bitrise-steplib/steps-github-release
+support_url: https://github.com/bitrise-steplib/steps-github-release/issues
 
 type_tags:
 - deploy
 
 toolkit:
   go:
-    package_name: github.com/godrei/steps-github-release
+    package_name: github.com/bitrise-steplib/steps-github-release
 
 inputs:
 - api_token: 
@@ -21,7 +21,7 @@ inputs:
     description: |-
       Github Personal API token used to access the GitHub API.
 
-      Create your own token: https://blog.github.com/2013-05-16-personal-api-tokens/
+      Create your own token: https://github.com/settings/tokens
 
       The following scopes needs to be enabled for the token:
 
@@ -67,8 +67,8 @@ inputs:
     is_required: true
 - draft: yes
   opts:
-    title: Release body
-    summary: The body of the release.
+    title: Draft
+    summary: If `no` selected the release will be published.
     description: |-
       `true` to create a draft (unpublished) release, `false` to create a published one.
     value_options: [yes, no]

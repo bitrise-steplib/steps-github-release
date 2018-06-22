@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-tools/go-steputils/stepconf"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
@@ -44,75 +44,45 @@ func failf(format string, args ...interface{}) {
 	os.Exit(1)
 }
 
+// Config ...
+type Config struct {
+	APIToken      stepconf.Secret `env:"api_token,required"`
+	RepositoryURL string          `env:"repository_url,required"`
+	Tag           string          `env:"tag,required"`
+	Commit        string          `env:"commit,required"`
+	Name          string          `env:"name,required"`
+	Body          string          `env:"body,required"`
+	Draft         string          `env:"draft,opt[yes,no]"`
+}
+
 func main() {
-	apiToken := os.Getenv("api_token")
-	repositoryURL := os.Getenv("repository_url")
-	tag := os.Getenv("tag")
-	commit := os.Getenv("commit")
-	name := os.Getenv("name")
-	body := os.Getenv("body")
-	draft := os.Getenv("draft")
-
-	log.Infof("Configs:")
-	log.Printf("- api_token: %s", apiToken)
-	log.Printf("- repository_url: %s", repositoryURL)
-	log.Printf("- tag: %s", tag)
-	log.Printf("- commit: %s", commit)
-	log.Printf("- name: %s", name)
-	log.Printf("- body: %s", body)
-	log.Printf("- draft: %s", draft)
-
-	if apiToken == "" {
-		failf("api_token not defined")
+	var c Config
+	if err := stepconf.Parse(&c); err != nil {
+		failf("Issue with input: %s")
 	}
-	if repositoryURL == "" {
-		failf("repository_url not defined")
-	}
-	if tag == "" {
-		failf("tag not defined")
-	}
-	if commit == "" {
-		failf("commit not defined")
-	}
-	if name == "" {
-		failf("name not defined")
-	}
-	if body == "" {
-		failf("body not defined")
-	}
-	if draft == "" {
-		failf("draft not defined")
-	}
+	stepconf.Print(c)
 
 	ctx := context.Background()
-	token := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: apiToken})
+	token := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: c.APIToken.String()})
 	authClient := oauth2.NewClient(ctx, token)
 	client := github.NewClient(authClient)
 
-	isDraft := (draft == "yes")
+	isDraft := (c.Draft == "yes")
 	release := &github.RepositoryRelease{
-		TagName:         &tag,
-		TargetCommitish: &commit,
-		Name:            &name,
-		Body:            &body,
+		TagName:         &c.Tag,
+		TargetCommitish: &c.Commit,
+		Name:            &c.Name,
+		Body:            &c.Body,
 		Draft:           &isDraft,
 	}
 
-	_, owner, name := parseRepo(repositoryURL)
-	newRelease, _, err := client.Repositories.CreateRelease(ctx, owner, name, release)
+	_, owner, repo := parseRepo(c.RepositoryURL)
+	newRelease, _, err := client.Repositories.CreateRelease(ctx, owner, repo, release)
 	if err != nil {
-		log.Errorf("Failed to create release: %s", err)
-		os.Exit(1)
-	}
-
-	printableRelease := newRelease.String()
-
-	b, err := json.MarshalIndent(newRelease, "", "  ")
-	if err == nil {
-		printableRelease = string(b)
+		failf("Failed to create release: %s", err)
 	}
 
 	fmt.Println()
 	log.Infof("Release created:")
-	log.Printf(printableRelease)
+	log.Printf(newRelease.GetHTMLURL())
 }
