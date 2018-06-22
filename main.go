@@ -58,7 +58,7 @@ type Config struct {
 func main() {
 	var c Config
 	if err := stepconf.Parse(&c); err != nil {
-		failf("Issue with input: %s")
+		failf("Issue with input: %s", err)
 	}
 	stepconf.Print(c)
 
