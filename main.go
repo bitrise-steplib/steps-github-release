@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-steputils/stepconf"
 	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
 )
 
 // formats:
@@ -47,12 +48,20 @@ func failf(format string, args ...interface{}) {
 // Config ...
 type Config struct {
 	APIToken      stepconf.Secret `env:"api_token,required"`
+	Username      stepconf.Secret `env:"username,required"`
 	RepositoryURL string          `env:"repository_url,required"`
 	Tag           string          `env:"tag,required"`
 	Commit        string          `env:"commit,required"`
 	Name          string          `env:"name,required"`
 	Body          string          `env:"body,required"`
 	Draft         string          `env:"draft,opt[yes,no]"`
+}
+
+// RoundTrip ...
+func (c Config) RoundTrip(req *http.Request) (*http.Response, error) {
+	userPassPair := []byte(fmt.Sprintf("%s:%s", string(c.Username), string(c.APIToken)))
+	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString(userPassPair))
+	return http.DefaultTransport.RoundTrip(req)
 }
 
 func main() {
@@ -62,10 +71,8 @@ func main() {
 	}
 	stepconf.Print(c)
 
-	ctx := context.Background()
-	token := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: c.APIToken.String()})
-	authClient := oauth2.NewClient(ctx, token)
-	client := github.NewClient(authClient)
+	basicAuthClient := &http.Client{Transport: c}
+	client := github.NewClient(basicAuthClient)
 
 	isDraft := (c.Draft == "yes")
 	release := &github.RepositoryRelease{
@@ -77,9 +84,9 @@ func main() {
 	}
 
 	_, owner, repo := parseRepo(c.RepositoryURL)
-	newRelease, _, err := client.Repositories.CreateRelease(ctx, owner, repo, release)
+	newRelease, _, err := client.Repositories.CreateRelease(context.Background(), owner, repo, release)
 	if err != nil {
-		failf("Failed to create release: %s", err)
+		failf("Failed to create release: %s\n", err)
 	}
 
 	fmt.Println()

@@ -27,6 +27,12 @@ inputs:
 
       - repo/public_repo
     is_required: true
+- username: 
+  opts:
+    title: Username
+    summary: Your Github user name
+    description: Your Github user name
+    is_required: true
 - repository_url: $GIT_REPOSITORY_URL
   opts:
     title: Repository URL
