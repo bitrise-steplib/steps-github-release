@@ -1,0 +1,123 @@
+format_version: 5
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+app:
+  envs:
+  # Define it (GITHUB_API_TOKEN) in .bitrise.secrets.yml
+  - BITRISE_GITHUB_API_TOKEN: $BITRISE_GITHUB_API_TOKEN
+  - BITRISE_GITHUB_USERNAME: $BITRISE_GITHUB_USERNAME
+  - RELEASE_VERSION: 0.9.0
+
+workflows:
+  test:
+    before_run:
+    - audit-this-step
+    steps:
+    - go-list:
+    - golint:
+    - errcheck:
+    - go-test:
+    - script:
+        title: rm -rf ./_tmp
+        inputs:
+        - content: rm -rf ./_tmp
+    - change-workdir:
+        title: cd ./_tmp
+        inputs:
+        - path: ./_tmp
+        - is_create_path: true
+    - path::./:
+        title: Step Test
+        inputs:
+        - api_token: $BITRISE_GITHUB_API_TOKEN
+        - username: $BITRISE_GITHUB_USERNAME
+        - repository_url: https://github.com/bitrise-samples/steps-github-release-test.git
+        - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
+        - tag: 0.9.$BITRISE_BUILD_NUMBER-draft
+        - name: 0.9.$BITRISE_BUILD_NUMBER-draft
+        - body: "new draft"
+        - draft: "yes"
+    - path::./:
+        title: Step Test
+        inputs:
+        - api_token: $BITRISE_GITHUB_API_TOKEN
+        - username: $BITRISE_GITHUB_USERNAME
+        - repository_url: https://github.com/bitrise-samples/steps-github-release-test.git
+        - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
+        - tag: 0.9.$BITRISE_BUILD_NUMBER
+        - name: 0.9.$BITRISE_BUILD_NUMBER
+        - body: "new release"
+        - draft: "no"
+
+  audit-this-step:
+    steps:
+    - script:
+        title: Audit step.yml
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            stepman audit --step-yml ./step.yml
+
+  # ----------------------------------------------------------------
+  # --- workflows to create Release
+  create-release:
+    steps:
+    - script:
+        title:
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+            export CI=true
+            releaseman create --version $RELEASE_VERSION
+  share-this-step:
+    envs:
+      # if you want to share this step into a StepLib
+      - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
+      - STEP_ID_IN_STEPLIB: generate-changelog
+      - STEP_GIT_VERION_TAG_TO_SHARE: $RELEASE_VERSION
+      - STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-generate-changelog.git
+    description: |-
+      If this is the first time you try to share a Step you should
+      first call: $ bitrise share
+      This will print you a guide, and information about how Step sharing
+      works. Please read it at least once!
+      As noted in the Step sharing guide you'll have to fork the
+      StepLib you want to share this step into. Once you're done with forking
+      the repository you should set your own fork's git clone URL
+      in the `.bitrise.secrets.yml` file, or here in the `envs` section,
+      as the value of the `MY_STEPLIB_REPO_FORK_GIT_URL` environment.
+      You're now ready to share this Step, just make sure that
+      the `STEP_ID_IN_STEPLIB` and `STEP_GIT_VERION_TAG_TO_SHARE`
+      environments are set to the desired values!
+      To share this Step into a StepLib you can just run: $ bitrise run share-this-step
+      Once it finishes the only thing left is to actually create a Pull Request,
+      the way described in the guide printed at the end of the process.
+    before_run:
+    - audit-this-step
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -x
+            bitrise share start -c ${MY_STEPLIB_REPO_FORK_GIT_URL}
+            bitrise share create --stepid ${STEP_ID_IN_STEPLIB} --tag ${STEP_GIT_VERION_TAG_TO_SHARE} --git ${STEP_GIT_CLONE_URL}
+            bitrise share finish
+
+  dep-update:
+    title: Dep update
+    description: |
+      Used for updating bitrise dependencies with dep
+    steps:
+    - script:
+        title: Dependency update
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            go get -u -v github.com/golang/dep/cmd/dep
+            dep ensure -v
+            dep ensure -v -update
