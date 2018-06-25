@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
@@ -59,8 +58,7 @@ type Config struct {
 
 // RoundTrip ...
 func (c Config) RoundTrip(req *http.Request) (*http.Response, error) {
-	userPassPair := []byte(fmt.Sprintf("%s:%s", string(c.Username), string(c.APIToken)))
-	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString(userPassPair))
+	req.SetBasicAuth(string(c.Username), string(c.APIToken))
 	return http.DefaultTransport.RoundTrip(req)
 }
 
