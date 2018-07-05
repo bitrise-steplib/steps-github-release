@@ -21,7 +21,7 @@ workflows:
         title: rm -rf ./_tmp
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/usr/bin/env bash
             rm -rf ./_tmp 
             echo "test file content" > /tmp/test_file.txt
     - change-workdir:
@@ -82,7 +82,7 @@ workflows:
         title: Audit step.yml
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/usr/bin/env bash
             set -ex
             stepman audit --step-yml ./step.yml
 
@@ -94,7 +94,7 @@ workflows:
         title:
         inputs:
         - content: |
-            #!/bin/bash
+            #!/usr/bin/env bash
             set -e
             export CI=true
             releaseman create --version $RELEASE_VERSION
@@ -127,7 +127,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/usr/bin/env bash
             set -e
             set -x
             bitrise share start -c ${MY_STEPLIB_REPO_FORK_GIT_URL}
@@ -143,7 +143,7 @@ workflows:
         title: Dependency update
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/usr/bin/env bash
             set -ex
             go get -u -v github.com/golang/dep/cmd/dep
             dep ensure -v

@@ -100,4 +100,3 @@ inputs:
       $BITRISE_DEPLOY_DIR/app-debug.apk|mycompany_debug_app.apk
       $BITRISE_DEPLOY_DIR/app-debug-androidTest.apk|mycompany_debug_app_test.apk
       ```
-    is_required: false
