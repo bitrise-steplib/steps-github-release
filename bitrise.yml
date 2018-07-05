@@ -20,14 +20,17 @@ workflows:
     - script:
         title: rm -rf ./_tmp
         inputs:
-        - content: rm -rf ./_tmp
+        - content: |-
+            #!/bin/bash
+            rm -rf ./_tmp 
+            echo "test file content" > /tmp/test_file.txt
     - change-workdir:
         title: cd ./_tmp
         inputs:
         - path: ./_tmp
         - is_create_path: true
     - path::./:
-        title: Step Test
+        title: Step Test - draft
         inputs:
         - api_token: $BITRISE_GITHUB_API_TOKEN
         - username: $BITRISE_GITHUB_USERNAME
@@ -38,7 +41,7 @@ workflows:
         - body: "new draft"
         - draft: "yes"
     - path::./:
-        title: Step Test
+        title: Step Test - public release
         inputs:
         - api_token: $BITRISE_GITHUB_API_TOKEN
         - username: $BITRISE_GITHUB_USERNAME
@@ -48,6 +51,30 @@ workflows:
         - name: 0.9.$BITRISE_BUILD_NUMBER
         - body: "new release"
         - draft: "no"
+    - path::./:
+        title: Step Test - draft file + no name
+        inputs:
+        - api_token: $BITRISE_GITHUB_API_TOKEN
+        - username: $BITRISE_GITHUB_USERNAME
+        - repository_url: https://github.com/bitrise-samples/steps-github-release-test.git
+        - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
+        - tag: 0.9.$BITRISE_BUILD_NUMBER-draft-no-filename
+        - name: 0.9.$BITRISE_BUILD_NUMBER-draft-no-filename
+        - body: "new draft"
+        - draft: "yes"
+        - files_to_upload: "/tmp/test_file.txt"
+    - path::./:
+        title: Step Test - draft file + name
+        inputs:
+        - api_token: $BITRISE_GITHUB_API_TOKEN
+        - username: $BITRISE_GITHUB_USERNAME
+        - repository_url: https://github.com/bitrise-samples/steps-github-release-test.git
+        - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
+        - tag: 0.9.$BITRISE_BUILD_NUMBER-draft-with-filename
+        - name: 0.9.$BITRISE_BUILD_NUMBER-draft-with-filename
+        - body: "new draft"
+        - draft: "yes"
+        - files_to_upload: "/tmp/test_file.txt|released_file.txt"
 
   audit-this-step:
     steps:

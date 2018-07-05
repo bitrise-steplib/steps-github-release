@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/log"
@@ -54,6 +55,7 @@ type Config struct {
 	Name          string          `env:"name,required"`
 	Body          string          `env:"body,required"`
 	Draft         string          `env:"draft,opt[yes,no]"`
+	FilesToUpload string          `env:"files_to_upload"`
 }
 
 // RoundTrip ...
@@ -90,4 +92,42 @@ func main() {
 	fmt.Println()
 	log.Infof("Release created:")
 	log.Printf(newRelease.GetHTMLURL())
+
+	if filelist := strings.TrimSpace(c.FilesToUpload); filelist != "" {
+		fmt.Println()
+		log.Infof("Uploading assets:")
+		files := strings.Split(filelist, "\n")
+		for i, filePath := range files {
+			if strings.TrimSpace(filePath) == "" {
+				continue
+			}
+
+			var fileName string
+			if s := strings.Split(filePath, "|"); len(s) > 1 {
+				if strings.TrimSpace(s[0]) != "" {
+					filePath = s[0]
+				} else {
+					failf("Invalid file path configuration: %s", filePath)
+				}
+				if strings.TrimSpace(s[1]) != "" {
+					fileName = s[1]
+				} else {
+					failf("Invalid file name configuration: %s", filePath)
+				}
+			} else {
+				fileName = filepath.Base(filePath)
+			}
+
+			log.Printf("(%d/%d) Uploading: %s - %s", i+1, len(files), fileName, filePath)
+			fi, err := os.Open(filePath)
+			if err != nil {
+				failf("Failed to open file (%s), error: %s", filePath, err)
+			}
+
+			if _, _, err := client.Repositories.UploadReleaseAsset(context.Background(), owner, repo, newRelease.GetID(), &github.UploadOptions{Name: fileName}, fi); err != nil {
+				failf("Failed to upload file (%s), error: %s", filePath, err)
+			}
+			log.Donef("- Done")
+		}
+	}
 }

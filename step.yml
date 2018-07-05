@@ -79,3 +79,25 @@ inputs:
       `true` to create a draft (unpublished) release, `false` to create a published one.
     value_options: [yes, no]
     is_required: true
+- files_to_upload:
+  opts:
+    title: Files to upload
+    summary: One file path per line to upload to the release assets section.
+    description: |-
+      One file path per line to upload to the release assets section. Optionally you can use a `|` separator at the end of the path
+      to set the uploaded file's name.
+
+      Example to use the file's original name:
+      
+      ```
+      $BITRISE_DEPLOY_DIR/app-debug.apk
+      $BITRISE_DEPLOY_DIR/app-debug-androidTest.apk
+      ```
+
+      Example to use custom file name:
+      
+      ```
+      $BITRISE_DEPLOY_DIR/app-debug.apk|mycompany_debug_app.apk
+      $BITRISE_DEPLOY_DIR/app-debug-androidTest.apk|mycompany_debug_app_test.apk
+      ```
+    is_required: false
