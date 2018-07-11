@@ -76,8 +76,10 @@ inputs:
     title: Draft
     summary: If `no` selected the release will be published.
     description: |-
-      `true` to create a draft (unpublished) release, `false` to create a published one.
-    value_options: [yes, no]
+      `yes` to create a draft (unpublished) release, `no` to create a published one.
+    value_options: 
+      - "yes"
+      - "no"
     is_required: true
 - files_to_upload:
   opts:
