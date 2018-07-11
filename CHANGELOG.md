@@ -1,6 +1,11 @@
-## Changelog (Current version: 0.9.2)
+## Changelog (Current version: 0.9.3)
 
 -----------------
+
+### 0.9.3 (2018 Jul 11)
+
+* [e3fcaf8] Prepare for 0.9.3
+* [96fcf5d] step.yml value_option fix for draft input (#3)
 
 ### 0.9.2 (2018 Jul 05)
 
@@ -14,4 +19,4 @@
 
 -----------------
 
-Updated: 2018 Jul 05
+Updated: 2018 Jul 11
