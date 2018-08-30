@@ -23,7 +23,7 @@ inputs:
 
       Create your own token: https://github.com/settings/tokens
 
-      The following scopes needs to be enabled for the token:
+      The following scope needs to be enabled for the token:
 
       - repo/public_repo
     is_required: true
@@ -74,9 +74,9 @@ inputs:
 - draft: yes
   opts:
     title: Draft
-    summary: If `no` selected the release will be published.
+    summary: If `no` is selected, the release will be published.
     description: |-
-      `yes` to create a draft (unpublished) release, `no` to create a published one.
+      Select `yes` to create a draft (unpublished) release, select `no` to create a published one.
     value_options: 
       - "yes"
       - "no"
