@@ -27,6 +27,7 @@ inputs:
 
       - repo/public_repo
     is_required: true
+    is_sensitive: true
 - username: 
   opts:
     title: Username
