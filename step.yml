@@ -71,7 +71,7 @@ inputs:
     title: Release body
     summary: The body of the release.
     is_required: true
-- draft: yes
+- draft: "yes"
   opts:
     title: Draft
     summary: If `no` is selected, the release will be published.
