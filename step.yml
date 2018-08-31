@@ -34,6 +34,7 @@ inputs:
     summary: Your Github user name
     description: Your Github user name
     is_required: true
+    is_sensitive: true
 - repository_url: $GIT_REPOSITORY_URL
   opts:
     title: Repository URL
