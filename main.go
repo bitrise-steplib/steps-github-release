@@ -55,6 +55,7 @@ type Config struct {
 	Name          string          `env:"name,required"`
 	Body          string          `env:"body,required"`
 	Draft         string          `env:"draft,opt[yes,no]"`
+	PreRelease    string          `env:"pre_release,opt[yes,no]"`
 	FilesToUpload string          `env:"files_to_upload"`
 }
 
@@ -74,13 +75,16 @@ func main() {
 	basicAuthClient := &http.Client{Transport: c}
 	client := github.NewClient(basicAuthClient)
 
-	isDraft := (c.Draft == "yes")
+	isDraft := c.Draft == "yes"
+	isPreRelease := c.PreRelease == "yes"
+
 	release := &github.RepositoryRelease{
 		TagName:         &c.Tag,
 		TargetCommitish: &c.Commit,
 		Name:            &c.Name,
 		Body:            &c.Body,
 		Draft:           &isDraft,
+		Prerelease:      &isPreRelease,
 	}
 
 	_, owner, repo := parseRepo(c.RepositoryURL)
