@@ -83,6 +83,18 @@ inputs:
       - "yes"
       - "no"
     is_required: true
+- pre_release: "no"
+  opts:
+    title: Pre-release
+    summary: If 'yes' is selected, the release is identifed as pre-release.
+    description: |-
+      Specifies whether the release is identified as pre-release or not.
+      Select `yes` to identify release as pre-release, select `no` to identify the release as full release.
+      Default: `no`.
+    value_options:
+      - "yes"
+      - "no"
+    is_required: false
 - files_to_upload:
   opts:
     title: Files to upload
