@@ -7,8 +7,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/retry"
 	"github.com/bitrise-tools/go-steputils/stepconf"
 	"github.com/google/go-github/github"
 )
@@ -128,9 +130,17 @@ func main() {
 				failf("Failed to open file (%s), error: %s", filePath, err)
 			}
 
-			if _, _, err := client.Repositories.UploadReleaseAsset(context.Background(), owner, repo, newRelease.GetID(), &github.UploadOptions{Name: fileName}, fi); err != nil {
+			if err := retry.Times(10).Wait(time.Second).Try(func(attempt uint) error {
+				if attempt > 0 {
+					log.Warnf("File upload attempt %d failed, retrying...", attempt)
+				}
+
+				_, _, err := client.Repositories.UploadReleaseAsset(context.Background(), owner, repo, newRelease.GetID(), &github.UploadOptions{Name: fileName}, fi)
+				return err
+			}); err != nil {
 				failf("Failed to upload file (%s), error: %s", filePath, err)
 			}
+
 			log.Donef("- Done")
 		}
 	}
