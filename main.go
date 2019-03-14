@@ -68,6 +68,7 @@ func (c Config) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func main() {
+	retryCount := uint(10)
 	var c Config
 	if err := stepconf.Parse(&c); err != nil {
 		failf("Issue with input: %s", err)
@@ -90,8 +91,18 @@ func main() {
 	}
 
 	_, owner, repo := parseRepo(c.RepositoryURL)
-	newRelease, _, err := client.Repositories.CreateRelease(context.Background(), owner, repo, release)
-	if err != nil {
+
+	var newRelease *github.RepositoryRelease
+
+	if err := retry.Times(retryCount).Wait(time.Second).Try(func(attempt uint) error {
+		if attempt > 0 {
+			log.Warnf("Create release attempt %d failed, retrying...", attempt)
+		}
+
+		release, _, err := client.Repositories.CreateRelease(context.Background(), owner, repo, release)
+		newRelease = release
+		return err
+	}); err != nil {
 		failf("Failed to create release: %s\n", err)
 	}
 
@@ -130,7 +141,7 @@ func main() {
 				failf("Failed to open file (%s), error: %s", filePath, err)
 			}
 
-			if err := retry.Times(10).Wait(time.Second).Try(func(attempt uint) error {
+			if err := retry.Times(retryCount).Wait(time.Second).Try(func(attempt uint) error {
 				if attempt > 0 {
 					log.Warnf("File upload attempt %d failed, retrying...", attempt)
 				}
