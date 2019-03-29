@@ -57,6 +57,8 @@ type Config struct {
 	Draft         string          `env:"draft,opt[yes,no]"`
 	PreRelease    string          `env:"pre_release,opt[yes,no]"`
 	FilesToUpload string          `env:"files_to_upload"`
+	APIUrl        string          `env:"api_base_url"`
+	UploadUrl     string          `env:"upload_base_url"`
 }
 
 // RoundTrip ...
@@ -73,7 +75,10 @@ func main() {
 	stepconf.Print(c)
 
 	basicAuthClient := &http.Client{Transport: c}
-	client := github.NewClient(basicAuthClient)
+	client, err := github.NewEnterpriseClient(c.APIUrl, c.UploadUrl, basicAuthClient)
+	if err != nil {
+		failf("Failed to create GitHub client: %s", err)
+	}
 
 	isDraft := c.Draft == "yes"
 	isPreRelease := c.PreRelease == "yes"

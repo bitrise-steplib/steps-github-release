@@ -33,6 +33,8 @@ workflows:
         inputs:
         - api_token: $BITRISE_GITHUB_API_TOKEN
         - username: $BITRISE_GITHUB_USERNAME
+        - api_base_url: https://https://api.github.com
+        - upload_base_url: https://uploads.github.com
         - repository_url: https://github.com/bitrise-samples/steps-github-release-test.git
         - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
         - tag: 0.9.$BITRISE_BUILD_NUMBER-draft
@@ -44,6 +46,8 @@ workflows:
         inputs:
         - api_token: $BITRISE_GITHUB_API_TOKEN
         - username: $BITRISE_GITHUB_USERNAME
+        - api_base_url: https://https://api.github.com
+        - upload_base_url: https://uploads.github.com
         - repository_url: https://github.com/bitrise-samples/steps-github-release-test.git
         - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
         - tag: 0.9.$BITRISE_BUILD_NUMBER
@@ -55,6 +59,8 @@ workflows:
         inputs:
         - api_token: $BITRISE_GITHUB_API_TOKEN
         - username: $BITRISE_GITHUB_USERNAME
+        - api_base_url: https://https://api.github.com
+        - upload_base_url: https://uploads.github.com
         - repository_url: https://github.com/bitrise-samples/steps-github-release-test.git
         - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
         - tag: 0.9.$BITRISE_BUILD_NUMBER-draft-no-filename
@@ -67,6 +73,8 @@ workflows:
         inputs:
         - api_token: $BITRISE_GITHUB_API_TOKEN
         - username: $BITRISE_GITHUB_USERNAME
+        - api_base_url: https://https://api.github.com
+        - upload_base_url: https://uploads.github.com
         - repository_url: https://github.com/bitrise-samples/steps-github-release-test.git
         - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
         - tag: 0.9.$BITRISE_BUILD_NUMBER-draft-with-filename

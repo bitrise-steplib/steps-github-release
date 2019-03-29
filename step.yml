@@ -48,6 +48,20 @@ inputs:
       - git@hostname:owner/repository.git
       - ssh://git@hostname:port/owner/repository.git
     is_required: true
+- api_base_url: "https://api.github.com"
+  opts:
+    title: "GitHub API base url"
+    summary: ""
+    description: |-
+      API URL for GitHub or Github Enterprise
+    is_expand: true
+- upload_base_url: "https://uploads.github.com"
+  opts:
+    title: "GitHub Upload base url"
+    summary: ""
+    description: |-
+      Upload URL for GitHub or Github Enterprise
+    is_expand: true
 - tag: $BITRISE_GIT_TAG
   opts:
     title: Tag
