@@ -61,6 +61,10 @@ type Config struct {
 	FilesToUpload string          `env:"files_to_upload"`
 }
 
+type releaseAsset struct {
+	path, displayFileName string
+}
+
 // RoundTrip ...
 func (c Config) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.SetBasicAuth(string(c.Username), string(c.APIToken))
@@ -99,33 +103,44 @@ func main() {
 	log.Infof("Release created:")
 	log.Printf(newRelease.GetHTMLURL())
 
-	if filelist := strings.TrimSpace(c.FilesToUpload); filelist != "" {
-		if err := uploadFileListWithRetry(filelist, client, owner, repo, newRelease.GetID()); err != nil {
-			failf("Error during upload: %s", err)
-		}
+	filelist, err := parseFilesListConfig(c.FilesToUpload)
+	if err != nil {
+		failf("Could not parse file list: %s", err)
+	}
+	if err := uploadFileListWithRetry(filelist, client, owner, repo, newRelease.GetID()); err != nil {
+		failf("Error during upload: %s", err)
 	}
 }
 
-func uploadFileListWithRetry(filelist string, client *github.Client, owner string, repo string, id int64) error {
+func parseFilesListConfig(fileList string) ([]releaseAsset, error) {
+	var assets []releaseAsset
+	if filelist := strings.TrimSpace(fileList); filelist != "" {
+		files := strings.Split(filelist, "\n")
+		for _, filePath := range files {
+			if strings.TrimSpace(filePath) == "" {
+				continue
+			}
+			fileName, filePath, err := getFileNameFromPath(filePath)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, releaseAsset{filePath, fileName})
+		}
+	}
+	return assets, nil
+}
+
+func uploadFileListWithRetry(assets []releaseAsset, client *github.Client, owner string, repo string, id int64) error {
 	fmt.Println()
 	log.Infof("Uploading assets:")
-	files := strings.Split(filelist, "\n")
-	for i, filePath := range files {
-		if strings.TrimSpace(filePath) == "" {
-			continue
+	for i, asset := range assets {
+		log.Printf("(%d/%d) Uploading: %s - %s", i+1, len(assets), asset.displayFileName, asset.path)
+		fi, err := os.Open(asset.path)
+		if err != nil {
+			return fmt.Errorf("Failed to open file (%s), error: %s", asset.path, err)
 		}
 
-		fileName, filePath, err := getFileNameFromPath(filePath)
-		if err != nil {
-			return err
-		}
-		log.Printf("(%d/%d) Uploading: %s - %s", i+1, len(files), fileName, filePath)
-		fi, err := os.Open(filePath)
-		if err != nil {
-			return fmt.Errorf("Failed to open file (%s), error: %s", filePath, err)
-		}
-
-		if err := uploadFileWithRetry(filePath, fileName, fi, client, owner, repo, id); err != nil {
+		if err := uploadFileWithRetry(asset.path, asset.displayFileName, fi, client, owner, repo, id); err != nil {
 			return err
 		}
 	}
