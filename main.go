@@ -100,13 +100,13 @@ func main() {
 	log.Printf(newRelease.GetHTMLURL())
 
 	if filelist := strings.TrimSpace(c.FilesToUpload); filelist != "" {
-		if err := uploadWithRetry(filelist, client, owner, repo, newRelease.GetID()); err != nil {
+		if err := uploadFileListWithRetry(filelist, client, owner, repo, newRelease.GetID()); err != nil {
 			failf("Error during upload: %s", err)
 		}
 	}
 }
 
-func uploadWithRetry(filelist string, client *github.Client, owner string, repo string, id int64) error {
+func uploadFileListWithRetry(filelist string, client *github.Client, owner string, repo string, id int64) error {
 	fmt.Println()
 	log.Infof("Uploading assets:")
 	files := strings.Split(filelist, "\n")
@@ -115,40 +115,54 @@ func uploadWithRetry(filelist string, client *github.Client, owner string, repo 
 			continue
 		}
 
-		var fileName string
-		if s := strings.Split(filePath, "|"); len(s) > 1 {
-			if strings.TrimSpace(s[0]) != "" {
-				filePath = s[0]
-			} else {
-				failf("Invalid file path configuration: %s", filePath)
-			}
-			if strings.TrimSpace(s[1]) != "" {
-				fileName = s[1]
-			} else {
-				failf("Invalid file name configuration: %s", filePath)
-			}
-		} else {
-			fileName = filepath.Base(filePath)
+		fileName, filePath, err := getFileNameFromPath(filePath)
+		if err != nil {
+			return err
 		}
-
 		log.Printf("(%d/%d) Uploading: %s - %s", i+1, len(files), fileName, filePath)
 		fi, err := os.Open(filePath)
 		if err != nil {
-			failf("Failed to open file (%s), error: %s", filePath, err)
+			return fmt.Errorf("Failed to open file (%s), error: %s", filePath, err)
 		}
 
-		if err := retry.Times(3).Wait(5 * time.Second).Try(func(attempt uint) error {
-			if attempt > 0 {
-				log.Warnf("%d attempt failed", attempt)
-			}
-			if _, _, err := client.Repositories.UploadReleaseAsset(context.Background(), owner, repo, id, &github.UploadOptions{Name: fileName}, fi); err != nil {
-				failf("Failed to upload file (%s), error: %s", filePath, err)
-			}
-			log.Donef("- Done")
-			return nil
-		}); err != nil {
+		if err := uploadFileWithRetry(filePath, fileName, fi, client, owner, repo, id); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func uploadFileWithRetry(filePath string, fileName string, fi *os.File, client *github.Client, owner string, repo string, id int64) error {
+	if err := retry.Times(3).Wait(5 * time.Second).Try(func(attempt uint) error {
+		if attempt > 0 {
+			log.Warnf("%d attempt failed", attempt)
+		}
+		if _, _, err := client.Repositories.UploadReleaseAsset(context.Background(), owner, repo, id, &github.UploadOptions{Name: fileName}, fi); err != nil {
+			return fmt.Errorf("Failed to upload file (%s), error: %s", filePath, err)
+		}
+		log.Donef("- Done")
+		return nil
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getFileNameFromPath(filePath string) (string, string, error) {
+	var fileName string
+	if s := strings.Split(filePath, "|"); len(s) > 1 {
+		if strings.TrimSpace(s[0]) != "" {
+			filePath = s[0]
+		} else {
+			return "", "", fmt.Errorf("Invalid file path configuration: %s", filePath)
+		}
+		if strings.TrimSpace(s[1]) != "" {
+			fileName = s[1]
+		} else {
+			return "", "", fmt.Errorf("Invalid file name configuration: %s", filePath)
+		}
+	} else {
+		fileName = filepath.Base(filePath)
+	}
+	return fileName, filePath, nil
 }
