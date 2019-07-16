@@ -78,6 +78,16 @@ func main() {
 	}
 	stepconf.Print(c)
 
+	filelist, err := parseFilesListConfig(c.FilesToUpload)
+	if err != nil {
+		failf("could not parse file list: %s", err)
+	}
+
+	if len(filelist) == 0 {
+		log.Warnf("There are no assets to release, nothing to do, exiting release step")
+		os.Exit(0)
+	}
+
 	basicAuthClient := &http.Client{Transport: c}
 	client := github.NewClient(basicAuthClient)
 
@@ -96,19 +106,15 @@ func main() {
 	_, owner, repo := parseRepo(c.RepositoryURL)
 	newRelease, _, err := client.Repositories.CreateRelease(context.Background(), owner, repo, release)
 	if err != nil {
-		failf("Failed to create release: %s\n", err)
+		failf("failed to create release: %s\n", err)
 	}
 
 	fmt.Println()
 	log.Infof("Release created:")
 	log.Printf(newRelease.GetHTMLURL())
 
-	filelist, err := parseFilesListConfig(c.FilesToUpload)
-	if err != nil {
-		failf("Could not parse file list: %s", err)
-	}
 	if err := uploadFileListWithRetry(filelist, client, owner, repo, newRelease.GetID()); err != nil {
-		failf("Error during upload: %s", err)
+		failf("error during upload: %s", err)
 	}
 }
 
@@ -137,7 +143,7 @@ func uploadFileListWithRetry(assets []releaseAsset, client *github.Client, owner
 		log.Printf("(%d/%d) Uploading: %s - %s", i+1, len(assets), asset.displayFileName, asset.path)
 		fi, err := os.Open(asset.path)
 		if err != nil {
-			return fmt.Errorf("Failed to open file (%s), error: %s", asset.path, err)
+			return fmt.Errorf("failed to open file (%s), error: %s", asset.path, err)
 		}
 
 		if err := uploadFileWithRetry(asset.path, asset.displayFileName, fi, client, owner, repo, id); err != nil {
@@ -148,19 +154,16 @@ func uploadFileListWithRetry(assets []releaseAsset, client *github.Client, owner
 }
 
 func uploadFileWithRetry(filePath string, fileName string, fi *os.File, client *github.Client, owner string, repo string, id int64) error {
-	if err := retry.Times(3).Wait(5 * time.Second).Try(func(attempt uint) error {
+	return retry.Times(3).Wait(5 * time.Second).Try(func(attempt uint) error {
 		if attempt > 0 {
 			log.Warnf("%d attempt failed", attempt)
 		}
 		if _, _, err := client.Repositories.UploadReleaseAsset(context.Background(), owner, repo, id, &github.UploadOptions{Name: fileName}, fi); err != nil {
-			return fmt.Errorf("Failed to upload file (%s), error: %s", filePath, err)
+			return fmt.Errorf("failed to upload file (%s), error: %s", filePath, err)
 		}
 		log.Donef("- Done")
 		return nil
-	}); err != nil {
-		return err
-	}
-	return nil
+	})
 }
 
 func getFileNameFromPath(filePath string) (string, string, error) {
@@ -169,12 +172,12 @@ func getFileNameFromPath(filePath string) (string, string, error) {
 		if strings.TrimSpace(s[0]) != "" {
 			filePath = s[0]
 		} else {
-			return "", "", fmt.Errorf("Invalid file path configuration: %s", filePath)
+			return "", "", fmt.Errorf("invalid file path configuration: %s", filePath)
 		}
 		if strings.TrimSpace(s[1]) != "" {
 			fileName = s[1]
 		} else {
-			return "", "", fmt.Errorf("Invalid file name configuration: %s", filePath)
+			return "", "", fmt.Errorf("invalid file name configuration: %s", filePath)
 		}
 	} else {
 		fileName = filepath.Base(filePath)
