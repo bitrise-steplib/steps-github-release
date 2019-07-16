@@ -83,11 +83,6 @@ func main() {
 		failf("could not parse file list: %s", err)
 	}
 
-	if len(filelist) == 0 {
-		log.Warnf("There are no assets to release, nothing to do, exiting release step")
-		os.Exit(0)
-	}
-
 	basicAuthClient := &http.Client{Transport: c}
 	client := github.NewClient(basicAuthClient)
 
