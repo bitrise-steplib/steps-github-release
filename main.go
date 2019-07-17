@@ -125,7 +125,7 @@ func parseFilesListConfig(fileList string) ([]releaseAsset, error) {
 			if err != nil {
 				return nil, err
 			}
-			assets = append(assets, releaseAsset{filePath, fileName})
+			assets = append(assets, releaseAsset{path: filePath, displayFileName: fileName})
 		}
 	}
 	return assets, nil
