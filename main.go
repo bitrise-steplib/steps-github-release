@@ -65,6 +65,25 @@ type releaseAsset struct {
 	path, displayFileName string
 }
 
+// AssetUploader interface to upload the assets
+type AssetUploader func(filePath string, fileName string, fi *os.File, client *github.Client, owner string, repo string, id int64) (*github.ReleaseAsset, *github.Response, error)
+
+// Uploader that holds the AssetUploader
+type Uploader struct {
+	assetUploader        AssetUploader
+	numberOfRetries      uint
+	waitIntervalInMilSec uint
+}
+
+// GetUploader returns the AssetUploader for this class
+func GetUploader(au AssetUploader, numberOfRetries uint, waitIntervalInMilSec uint) *Uploader {
+	return &Uploader{assetUploader: au, numberOfRetries: numberOfRetries, waitIntervalInMilSec: waitIntervalInMilSec}
+}
+
+func uploadAsset(filePath string, fileName string, fi *os.File, client *github.Client, owner string, repo string, id int64) (*github.ReleaseAsset, *github.Response, error) {
+	return client.Repositories.UploadReleaseAsset(context.Background(), owner, repo, id, &github.UploadOptions{Name: fileName}, fi)
+}
+
 // RoundTrip ...
 func (c Config) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.SetBasicAuth(string(c.Username), string(c.APIToken))
@@ -141,19 +160,19 @@ func uploadFileListWithRetry(assets []releaseAsset, client *github.Client, owner
 			return fmt.Errorf("failed to open file (%s), error: %s", asset.path, err)
 		}
 
-		if err := uploadFileWithRetry(asset.path, asset.displayFileName, fi, client, owner, repo, id); err != nil {
+		if err := uploadFileWithRetry(GetUploader(uploadAsset, 3, 5000), asset.path, asset.displayFileName, fi, client, owner, repo, id); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func uploadFileWithRetry(filePath string, fileName string, fi *os.File, client *github.Client, owner string, repo string, id int64) error {
-	return retry.Times(3).Wait(5 * time.Second).Try(func(attempt uint) error {
+func uploadFileWithRetry(uploader *Uploader, filePath string, fileName string, fi *os.File, client *github.Client, owner string, repo string, id int64) error {
+	return retry.Times(uploader.numberOfRetries).Wait(time.Duration(uploader.waitIntervalInMilSec) * time.Millisecond).Try(func(attempt uint) error {
 		if attempt > 0 {
 			log.Warnf("%d attempt failed", attempt)
 		}
-		if _, _, err := client.Repositories.UploadReleaseAsset(context.Background(), owner, repo, id, &github.UploadOptions{Name: fileName}, fi); err != nil {
+		if _, _, err := uploader.assetUploader(filePath, fileName, fi, client, owner, repo, id); err != nil {
 			return fmt.Errorf("failed to upload file (%s), error: %s", filePath, err)
 		}
 		log.Donef("- Done")
