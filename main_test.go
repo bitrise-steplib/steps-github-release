@@ -1,8 +1,15 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"fmt"
+	"os"
 	"testing"
 
+	"github.com/bitrise-io/go-utils/log"
+	"github.com/google/go-github/github"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,4 +37,31 @@ func TestParseRepo(t *testing.T) {
 		require.Equal(t, owner, "bitrise")
 		require.Equal(t, name, "steps-github-release")
 	}
+}
+
+func TestRetryUpload(t *testing.T) {
+	t.Log("Tests retry should fail if no connection")
+	{
+		var buf bytes.Buffer
+		writer := bufio.NewWriter(&buf)
+		log.SetOutWriter(writer)
+		err := uploadFileWithRetry(GetUploader(mockUploadAsset, 3, 1), "", "", nil, nil, "", "", 0)
+		assert.Error(t, err, "Could not connect")
+		if err := writer.Flush(); err != nil {
+			failf("Could not flush buffer: %s", err)
+		}
+		expected := buf.String()
+		buf.Reset()
+		log.Warnf("1 attempt failed")
+		log.Warnf("2 attempt failed")
+		log.Warnf("3 attempt failed")
+		if err := writer.Flush(); err != nil {
+			failf("Could not flush buffer: %s", err)
+		}
+		require.Equal(t, expected, buf.String())
+	}
+}
+
+func mockUploadAsset(filePath string, fileName string, fi *os.File, client *github.Client, owner string, repo string, id int64) (*github.ReleaseAsset, *github.Response, error) {
+	return nil, nil, fmt.Errorf("Could not connect")
 }
