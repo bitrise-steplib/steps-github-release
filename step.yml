@@ -123,6 +123,7 @@ inputs:
     description: |-
        The default value is https://api.github.com.
     is_expand: true
+    is_required: true
 - upload_base_url: "https://uploads.github.com"
   opts:
     title: GitHub Upload base url
@@ -130,3 +131,4 @@ inputs:
     description: |-
       The default value is https://uploads.github.com.
     is_expand: true
+    is_required: true

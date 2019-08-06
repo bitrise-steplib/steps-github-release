@@ -59,8 +59,8 @@ type Config struct {
 	Draft         string          `env:"draft,opt[yes,no]"`
 	PreRelease    string          `env:"pre_release,opt[yes,no]"`
 	FilesToUpload string          `env:"files_to_upload"`
-	APIUrl        string          `env:"api_base_url"`
-	UploadURL     string          `env:"upload_base_url"`
+	APIURL        string          `env:"api_base_url,required"`
+	UploadURL     string          `env:"upload_base_url,required"`
 }
 
 type releaseAsset struct {
@@ -105,7 +105,7 @@ func main() {
 	}
 
 	basicAuthClient := &http.Client{Transport: c}
-	client, err := github.NewEnterpriseClient(c.APIUrl, c.UploadURL, basicAuthClient)
+	client, err := github.NewEnterpriseClient(c.APIURL, c.UploadURL, basicAuthClient)
 	if err != nil {
 		failf("Failed to create GitHub client: %s", err)
 	}
