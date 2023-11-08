@@ -83,6 +83,16 @@ inputs:
       - "yes"
       - "no"
     is_required: true
+- gen_release_notes: "yes"
+  opts:
+    title: Generate Release Notes
+    summary: If `yes` is selected, GitHub will automatically generate release notes.
+    description: |-
+      The release notes are based on the automatic tag comparison.
+    value_options: 
+      - "yes"
+      - "no"
+    is_required: true
 - pre_release: "no"
   opts:
     title: Pre-release

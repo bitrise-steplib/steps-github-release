@@ -37,6 +37,7 @@ type RepositoryRelease struct {
 	TarballURL      *string        `json:"tarball_url,omitempty"`
 	Author          *User          `json:"author,omitempty"`
 	NodeID          *string        `json:"node_id,omitempty"`
+	GenReleaseNotes *bool	       `json:"generate_release_notes,omitempty"`
 }
 
 func (r RepositoryRelease) String() string {

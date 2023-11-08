@@ -61,6 +61,7 @@ type Config struct {
 	FilesToUpload string          `env:"files_to_upload"`
 	APIURL        string          `env:"api_base_url,required"`
 	UploadURL     string          `env:"upload_base_url,required"`
+	GenReleaseNotes string        `env:"gen_release_notes,opt[yes,no]"`
 }
 
 type releaseAsset struct {
@@ -112,6 +113,7 @@ func main() {
 
 	isDraft := c.Draft == "yes"
 	isPreRelease := c.PreRelease == "yes"
+	genReleaseNotes := c.GenReleaseNotes == "yes"
 
 	release := &github.RepositoryRelease{
 		TagName:         &c.Tag,
@@ -120,6 +122,7 @@ func main() {
 		Body:            &c.Body,
 		Draft:           &isDraft,
 		Prerelease:      &isPreRelease,
+		GenReleaseNotes: &genReleaseNotes,
 	}
 
 	_, owner, repo := parseRepo(c.RepositoryURL)
