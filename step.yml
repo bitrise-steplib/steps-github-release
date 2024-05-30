@@ -73,22 +73,20 @@ inputs:
     title: Release body
     summary: The body of the release.
     is_required: true
+- generate_release_notes: "yes"
+  opts:
+    title: Generate Release Notes
+    summary: If `yes` is selected, GitHub will automatically generate release notes.
+    value_options:
+    - "yes"
+    - "no"
+    is_required: true
 - draft: "yes"
   opts:
     title: Draft
     summary: If `no` is selected, the release will be published.
     description: |-
       Select `yes` to create a draft (unpublished) release, select `no` to create a published one.
-    value_options: 
-      - "yes"
-      - "no"
-    is_required: true
-- gen_release_notes: "yes"
-  opts:
-    title: Generate Release Notes
-    summary: If `yes` is selected, GitHub will automatically generate release notes.
-    description: |-
-      The release notes are based on the automatic tag comparison.
     value_options: 
       - "yes"
       - "no"

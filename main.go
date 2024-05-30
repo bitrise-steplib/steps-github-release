@@ -12,7 +12,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/retry"
 	"github.com/bitrise-tools/go-steputils/stepconf"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v57/github"
 )
 
 // formats:
@@ -49,19 +49,19 @@ func failf(format string, args ...interface{}) {
 
 // Config ...
 type Config struct {
-	APIToken      stepconf.Secret `env:"api_token,required"`
-	Username      stepconf.Secret `env:"username,required"`
-	RepositoryURL string          `env:"repository_url,required"`
-	Tag           string          `env:"tag,required"`
-	Commit        string          `env:"commit,required"`
-	Name          string          `env:"name,required"`
-	Body          string          `env:"body,required"`
-	Draft         string          `env:"draft,opt[yes,no]"`
-	PreRelease    string          `env:"pre_release,opt[yes,no]"`
-	FilesToUpload string          `env:"files_to_upload"`
-	APIURL        string          `env:"api_base_url,required"`
-	UploadURL     string          `env:"upload_base_url,required"`
-	GenReleaseNotes string        `env:"gen_release_notes,opt[yes,no]"`
+	APIToken             stepconf.Secret `env:"api_token,required"`
+	Username             stepconf.Secret `env:"username,required"`
+	RepositoryURL        string          `env:"repository_url,required"`
+	Tag                  string          `env:"tag,required"`
+	Commit               string          `env:"commit,required"`
+	Name                 string          `env:"name,required"`
+	Body                 string          `env:"body"`
+	Draft                string          `env:"draft,opt[yes,no]"`
+	PreRelease           string          `env:"pre_release,opt[yes,no]"`
+	FilesToUpload        string          `env:"files_to_upload"`
+	APIURL               string          `env:"api_base_url,required"`
+	UploadURL            string          `env:"upload_base_url,required"`
+	GenerateReleaseNotes string          `env:"generate_release_notes,opt[yes,no]"`
 }
 
 type releaseAsset struct {
@@ -113,16 +113,16 @@ func main() {
 
 	isDraft := c.Draft == "yes"
 	isPreRelease := c.PreRelease == "yes"
-	genReleaseNotes := c.GenReleaseNotes == "yes"
+	genReleaseNotes := c.GenerateReleaseNotes == "yes"
 
 	release := &github.RepositoryRelease{
-		TagName:         &c.Tag,
-		TargetCommitish: &c.Commit,
-		Name:            &c.Name,
-		Body:            &c.Body,
-		Draft:           &isDraft,
-		Prerelease:      &isPreRelease,
-		GenReleaseNotes: &genReleaseNotes,
+		TagName:              &c.Tag,
+		TargetCommitish:      &c.Commit,
+		Name:                 &c.Name,
+		Body:                 &c.Body,
+		Draft:                &isDraft,
+		Prerelease:           &isPreRelease,
+		GenerateReleaseNotes: &genReleaseNotes,
 	}
 
 	_, owner, repo := parseRepo(c.RepositoryURL)

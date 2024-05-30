@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v57/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
