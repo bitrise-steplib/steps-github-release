@@ -168,7 +168,8 @@ func uploadFileListWithRetry(assets []releaseAsset, client *github.Client, owner
 			return fmt.Errorf("failed to open file (%s), error: %s", asset.path, err)
 		}
 
-		if err := uploadFileWithRetry(GetUploader(uploadAsset, 3, 5000), asset.path, asset.displayFileName, fi, client, owner, repo, id); err != nil {
+		uploader := GetUploader(uploadAsset, 3, 5000)
+		if err := uploadFileWithRetry(uploader, asset.path, asset.displayFileName, fi, client, owner, repo, id); err != nil {
 			return err
 		}
 	}
@@ -177,11 +178,12 @@ func uploadFileListWithRetry(assets []releaseAsset, client *github.Client, owner
 
 func uploadFileWithRetry(uploader *Uploader, filePath string, fileName string, fi *os.File, client *github.Client, owner string, repo string, id int64) error {
 	return retry.Times(uploader.numberOfRetries).Wait(time.Duration(uploader.waitIntervalInMilSec) * time.Millisecond).Try(func(attempt uint) error {
-		if attempt > 0 {
-			log.Warnf("%d attempt failed", attempt)
-		}
 		if _, _, err := uploader.assetUploader(filePath, fileName, fi, client, owner, repo, id); err != nil {
-			return fmt.Errorf("failed to upload file (%s), error: %s", filePath, err)
+			err := fmt.Errorf("failed to upload file (%s): %w", filePath, err)
+			if attempt < uploader.numberOfRetries {
+				log.Warnf("%d. attempt failed: %s", attempt+1, err)
+			}
+			return err
 		}
 		log.Donef("- Done")
 		return nil
