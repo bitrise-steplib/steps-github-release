@@ -52,9 +52,9 @@ func TestRetryUpload(t *testing.T) {
 		}
 		expected := buf.String()
 		buf.Reset()
-		log.Warnf("1 attempt failed")
-		log.Warnf("2 attempt failed")
-		log.Warnf("3 attempt failed")
+		log.Warnf("1. attempt failed: failed to upload file (): Could not connect")
+		log.Warnf("2. attempt failed: failed to upload file (): Could not connect")
+		log.Warnf("3. attempt failed: failed to upload file (): Could not connect")
 		if err := writer.Flush(); err != nil {
 			failf("Could not flush buffer: %s", err)
 		}
