@@ -116,19 +116,15 @@ inputs:
       $BITRISE_DEPLOY_DIR/app-debug.apk|mycompany_debug_app.apk
       $BITRISE_DEPLOY_DIR/app-debug-androidTest.apk|mycompany_debug_app_test.apk
       ```
-- api_base_url: "https://api.github.com"
+- api_base_url:
   opts:
-    title: GitHub API base url
-    summary: API URL for GitHub or Github Enterprise.
-    description: |-
-       The default value is https://api.github.com.
+    title: API base url for GitHub Enterprise
+    summary: The URL format should be http(s)://[hostname]/api/v3/
     is_expand: true
-    is_required: true
-- upload_base_url: "https://uploads.github.com"
+    is_required: false
+- upload_base_url:
   opts:
-    title: GitHub Upload base url
-    summary: Upload URL for GitHub or Github Enterprise.
-    description: |-
-      The default value is https://uploads.github.com.
+    title: Upload URL for GitHub Enterprise
+    summary: The URL format should be http(s)://[hostname]/api/uploads/
     is_expand: true
-    is_required: true
+    is_required: false
