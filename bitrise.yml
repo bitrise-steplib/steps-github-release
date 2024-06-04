@@ -47,7 +47,7 @@ workflows:
         - repository_url: https://github.com/bitrise-io/steps-github-release-test.git
         - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
         - tag: 0.9.$BITRISE_BUILD_NUMBER-draft-with-generate-release-notes
-        - name: 0.9.$BITRISE_BUILD_NUMBER-draft
+        - name: 0.9.$BITRISE_BUILD_NUMBER-draft-with-generate-release-notes
         - draft: "yes"
         - generate_release_notes: "yes"
     - path::./:
