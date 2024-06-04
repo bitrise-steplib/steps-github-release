@@ -3,16 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/retry"
-	"github.com/bitrise-tools/go-steputils/stepconf"
-	"github.com/google/go-github/v57/github"
+	"github.com/google/go-github/v62/github"
 )
 
 // formats:
@@ -59,8 +58,8 @@ type Config struct {
 	Draft                string          `env:"draft,opt[yes,no]"`
 	PreRelease           string          `env:"pre_release,opt[yes,no]"`
 	FilesToUpload        string          `env:"files_to_upload"`
-	APIURL               string          `env:"api_base_url,required"`
-	UploadURL            string          `env:"upload_base_url,required"`
+	APIURL               string          `env:"api_base_url"`
+	UploadURL            string          `env:"upload_base_url"`
 	GenerateReleaseNotes string          `env:"generate_release_notes,opt[yes,no]"`
 }
 
@@ -87,12 +86,6 @@ func uploadAsset(filePath string, fileName string, fi *os.File, client *github.C
 	return client.Repositories.UploadReleaseAsset(context.Background(), owner, repo, id, &github.UploadOptions{Name: fileName}, fi)
 }
 
-// RoundTrip ...
-func (c Config) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.SetBasicAuth(string(c.Username), string(c.APIToken))
-	return http.DefaultTransport.RoundTrip(req)
-}
-
 func main() {
 	var c Config
 	if err := stepconf.Parse(&c); err != nil {
@@ -100,15 +93,17 @@ func main() {
 	}
 	stepconf.Print(c)
 
-	filelist, err := parseFilesListConfig(c.FilesToUpload)
+	filesToUpload, err := parseFilesListConfig(c.FilesToUpload)
 	if err != nil {
 		failf("could not parse file list: %s", err)
 	}
 
-	basicAuthClient := &http.Client{Transport: c}
-	client, err := github.NewEnterpriseClient(c.APIURL, c.UploadURL, basicAuthClient)
-	if err != nil {
-		failf("Failed to create GitHub client: %s", err)
+	client := github.NewClient(nil).WithAuthToken(string(c.APIToken))
+	if c.APIURL != "" {
+		client, err = client.WithEnterpriseURLs(c.APIURL, c.UploadURL)
+		if err != nil {
+			failf("Failed to create GitHub client: %s", err)
+		}
 	}
 
 	isDraft := c.Draft == "yes"
@@ -135,7 +130,7 @@ func main() {
 	log.Infof("Release created:")
 	log.Printf(newRelease.GetHTMLURL())
 
-	if err := uploadFileListWithRetry(filelist, client, owner, repo, newRelease.GetID()); err != nil {
+	if err := uploadFileListWithRetry(filesToUpload, client, owner, repo, newRelease.GetID()); err != nil {
 		failf("error during upload: %s", err)
 	}
 }
