@@ -163,8 +163,7 @@ func uploadFileListWithRetry(assets []releaseAsset, client *github.Client, owner
 			return fmt.Errorf("failed to open file (%s), error: %s", asset.path, err)
 		}
 
-		uploader := GetUploader(uploadAsset, 3, 5000)
-		if err := uploadFileWithRetry(uploader, asset.path, asset.displayFileName, fi, client, owner, repo, id); err != nil {
+		if err := uploadFileWithRetry(GetUploader(uploadAsset, 3, 5000), asset.path, asset.displayFileName, fi, client, owner, repo, id); err != nil {
 			return err
 		}
 	}
