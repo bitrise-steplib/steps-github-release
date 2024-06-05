@@ -72,6 +72,13 @@ inputs:
   opts:
     title: Release body
     summary: The body of the release.
+- generate_release_notes: "no"
+  opts:
+    title: Generate Release Notes
+    summary: If `yes` is selected, GitHub will automatically generate release notes.
+    value_options:
+    - "yes"
+    - "no"
     is_required: true
 - draft: "yes"
   opts:

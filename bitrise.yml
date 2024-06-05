@@ -21,7 +21,7 @@ workflows:
         inputs:
         - content: |-
             #!/usr/bin/env bash
-            rm -rf ./_tmp 
+            rm -rf ./_tmp
             echo "test file content" > /tmp/test_file.txt
     - change-workdir:
         title: cd ./_tmp
@@ -39,6 +39,17 @@ workflows:
         - name: 0.9.$BITRISE_BUILD_NUMBER-draft
         - body: "new draft"
         - draft: "yes"
+    - path::./:
+        title: Step Test - draft + generate release notes
+        inputs:
+        - api_token: $BITRISE_GITHUB_API_TOKEN
+        - username: $BITRISE_GITHUB_USERNAME
+        - repository_url: https://github.com/bitrise-io/steps-github-release-test.git
+        - commit: "2b6c76430d1e303a9a718a29a93d5d133a353349"
+        - tag: 0.9.$BITRISE_BUILD_NUMBER-draft-with-generate-release-notes
+        - name: 0.9.$BITRISE_BUILD_NUMBER-draft-with-generate-release-notes
+        - draft: "yes"
+        - generate_release_notes: "yes"
     - path::./:
         title: Step Test - public release
         inputs:

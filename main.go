@@ -48,18 +48,19 @@ func failf(format string, args ...interface{}) {
 
 // Config ...
 type Config struct {
-	APIToken      stepconf.Secret `env:"api_token,required"`
-	Username      stepconf.Secret `env:"username,required"`
-	RepositoryURL string          `env:"repository_url,required"`
-	Tag           string          `env:"tag,required"`
-	Commit        string          `env:"commit,required"`
-	Name          string          `env:"name,required"`
-	Body          string          `env:"body,required"`
-	Draft         string          `env:"draft,opt[yes,no]"`
-	PreRelease    string          `env:"pre_release,opt[yes,no]"`
-	FilesToUpload string          `env:"files_to_upload"`
-	APIURL        string          `env:"api_base_url"`
-	UploadURL     string          `env:"upload_base_url"`
+	APIToken             stepconf.Secret `env:"api_token,required"`
+	Username             stepconf.Secret `env:"username,required"`
+	RepositoryURL        string          `env:"repository_url,required"`
+	Tag                  string          `env:"tag,required"`
+	Commit               string          `env:"commit,required"`
+	Name                 string          `env:"name,required"`
+	Body                 string          `env:"body"`
+	Draft                string          `env:"draft,opt[yes,no]"`
+	PreRelease           string          `env:"pre_release,opt[yes,no]"`
+	FilesToUpload        string          `env:"files_to_upload"`
+	APIURL               string          `env:"api_base_url"`
+	UploadURL            string          `env:"upload_base_url"`
+	GenerateReleaseNotes string          `env:"generate_release_notes,opt[yes,no]"`
 }
 
 type releaseAsset struct {
@@ -107,14 +108,16 @@ func main() {
 
 	isDraft := c.Draft == "yes"
 	isPreRelease := c.PreRelease == "yes"
+	genReleaseNotes := c.GenerateReleaseNotes == "yes"
 
 	release := &github.RepositoryRelease{
-		TagName:         &c.Tag,
-		TargetCommitish: &c.Commit,
-		Name:            &c.Name,
-		Body:            &c.Body,
-		Draft:           &isDraft,
-		Prerelease:      &isPreRelease,
+		TagName:              &c.Tag,
+		TargetCommitish:      &c.Commit,
+		Name:                 &c.Name,
+		Body:                 &c.Body,
+		Draft:                &isDraft,
+		Prerelease:           &isPreRelease,
+		GenerateReleaseNotes: &genReleaseNotes,
 	}
 
 	_, owner, repo := parseRepo(c.RepositoryURL)
