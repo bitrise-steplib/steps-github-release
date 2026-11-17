@@ -4,7 +4,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
   # Define it (GITHUB_API_TOKEN) in .bitrise.secrets.yml
-  - BITRISE_GITHUB_API_TOKEN: $BITRISE_GITHUB_API_TOKEN
+  - BITRISE_GITHUB_API_TOKEN: $GITHUB_TOKEN_STEPLIB_OPEN_PR
   - BITRISE_GITHUB_USERNAME: $BITRISE_GITHUB_USERNAME
 
 workflows:
